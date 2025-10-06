@@ -1,25 +1,33 @@
 import { prisma } from '../../config/prisma';
 import { hashPassword, comparePassword, createTokens } from '../../utils/auth';
 import { ConflictError, UnauthorizedError, BadRequestError } from '../../utils/customErrors';
+import { Role } from '@prisma/client';
 
 // Create a type for user data
 export type UserData = {
   email: string;
   name: string;
   password: string;
+  role: Role; // Added role
 };
 
 // Create a type for login data
 export type LoginData = {
   email: string;
   password: string;
+  role: Role; // Added role
 };
 
 // Service for Sign Up
 export const signUp = async (userData: UserData) => {
   // Validate input
-  if (!userData.email || !userData.name || !userData.password) {
-    throw BadRequestError('Email, name, and password are required');
+  if (!userData.email || !userData.name || !userData.password || !userData.role) {
+    throw BadRequestError('Email, name, password, and role are required');
+  }
+
+  // Validate role (only DEVELOPER or RECRUITER allowed for signup)
+  if (userData.role !== Role.DEVELOPER && userData.role !== Role.RECRUITER) {
+    throw BadRequestError('Invalid role. Only DEVELOPER or RECRUITER allowed for signup');
   }
 
   // Validate email format
@@ -46,10 +54,14 @@ export const signUp = async (userData: UserData) => {
   // Hash the password before storing it
   const hashedPassword = await hashPassword(userData.password);
 
-  // If user does not exist, create a new user
+  // If user does not exist, create a new user with the selected role
   const user = await prisma.user.create({
-    // we have to modify the data along with the hashed password and role as USER
-    data: { ...userData, password: hashedPassword, role: 'USER' },
+    data: {
+      email: userData.email,
+      name: userData.name,
+      password: hashedPassword,
+      role: userData.role
+    },
     select: {
       id: true,
       email: true,
@@ -85,8 +97,13 @@ export const signUp = async (userData: UserData) => {
 // Service for Login
 export const login = async (loginData: LoginData) => {
   // Validate input
-  if (!loginData.email || !loginData.password) {
-    throw BadRequestError('Email and password are required');
+  if (!loginData.email || !loginData.password || !loginData.role) {
+    throw BadRequestError('Email, password, and role are required');
+  }
+
+  // Validate role
+  if (loginData.role !== Role.DEVELOPER && loginData.role !== Role.RECRUITER && loginData.role !== Role.ADMIN) {
+    throw BadRequestError('Invalid role');
   }
 
   // Find user by email
@@ -96,7 +113,12 @@ export const login = async (loginData: LoginData) => {
 
   // If user does not exist, throw an error
   if (!user) {
-    throw UnauthorizedError('Invalid email or password');
+    throw UnauthorizedError('Invalid email, password, or role');
+  }
+
+  // Check if role matches
+  if (user.role !== loginData.role) {
+    throw UnauthorizedError('Invalid email, password, or role');
   }
 
   // Compare password
@@ -104,7 +126,7 @@ export const login = async (loginData: LoginData) => {
 
   // If password is invalid, throw an error
   if (!isPasswordValid) {
-    throw UnauthorizedError('Invalid email or password');
+    throw UnauthorizedError('Invalid email, password, or role');
   }
 
   // Generate tokens

@@ -12,7 +12,7 @@ model User {
   email     String        @unique
   password  String
   name      String
-  role      Role          @default(USER)
+  role      Role          @default(DEVELOPER)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   tokens    RefreshToken[]
@@ -28,6 +28,7 @@ model RefreshToken {
 }
 
 enum Role {
-  USER
+  DEVELOPER
+  RECRUITER
   ADMIN
 }
