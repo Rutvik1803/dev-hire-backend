@@ -1,4 +1,5 @@
 import express, { Express, Request, Response } from 'express';
+import cookieParser from 'cookie-parser';
 import config from './config';
 import authRoutes from './modules/auth/auth.route';
 import { errorHandler } from './middlewares/errorHandler';
@@ -8,6 +9,9 @@ const PORT: number = Number(config.PORT);
 
 // Middleware to parse JSON requests
 app.use(express.json());
+
+// Middleware to parse cookies
+app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
