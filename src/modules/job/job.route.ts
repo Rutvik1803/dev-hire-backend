@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../middlewares/asyncHandler';
 import { authenticate } from '../../middlewares/authMiddleware';
-import { requireRecruiter } from '../../middlewares/authorizationMiddleware';
+import { requireRecruiter, requireDeveloper } from '../../middlewares/authorizationMiddleware';
 import {
     createJobController,
     getAllJobsController,
@@ -10,6 +10,7 @@ import {
     updateJobController,
     deleteJobController,
 } from './job.controller';
+import { checkApplicationStatusController } from '../developer/developer.controller';
 
 const router = Router();
 
@@ -22,6 +23,9 @@ router.get('/my/jobs', authenticate, requireRecruiter, asyncHandler(getMyJobsCon
 
 // Public route - Get single job by ID (anyone can view)
 router.get('/:id', asyncHandler(getJobByIdController));
+
+// Developer route - Check if developer has applied to a job
+router.get('/:jobId/application-status', authenticate, requireDeveloper, asyncHandler(checkApplicationStatusController));
 
 // Create new job - Only recruiters can post jobs
 router.post('/', authenticate, requireRecruiter, asyncHandler(createJobController));

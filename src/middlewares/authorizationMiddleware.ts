@@ -17,7 +17,7 @@ export const authorize = (...allowedRoles: Role[]) => {
 
       // Check if user's role is in allowed roles
       const userRole = req.user.role as Role;
-      
+
       if (!allowedRoles.includes(userRole)) {
         throw ForbiddenError('You do not have permission to perform this action');
       }
@@ -33,6 +33,11 @@ export const authorize = (...allowedRoles: Role[]) => {
  * Middleware specifically for recruiter-only routes
  */
 export const requireRecruiter = authorize(Role.RECRUITER);
+
+/**
+ * Middleware specifically for developer-only routes
+ */
+export const requireDeveloper = authorize(Role.DEVELOPER);
 
 /**
  * Middleware specifically for admin-only routes

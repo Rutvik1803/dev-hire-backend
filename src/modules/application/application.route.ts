@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../middlewares/asyncHandler';
 import { authenticate } from '../../middlewares/authMiddleware';
-import { requireRecruiter } from '../../middlewares/authorizationMiddleware';
+import { requireRecruiter, requireDeveloper } from '../../middlewares/authorizationMiddleware';
 import {
     applyToJobController,
     getJobApplicationsController,
@@ -11,6 +11,7 @@ import {
     updateApplicationStatusController,
     getDashboardStatsController,
 } from './application.controller';
+import { withdrawApplicationController } from '../developer/developer.controller';
 
 const router = Router();
 
@@ -55,6 +56,14 @@ router.patch(
     authenticate,
     requireRecruiter,
     asyncHandler(updateApplicationStatusController)
+);
+
+// Developer route - Withdraw application
+router.delete(
+    '/applications/:applicationId',
+    authenticate,
+    requireDeveloper,
+    asyncHandler(withdrawApplicationController)
 );
 
 export default router;

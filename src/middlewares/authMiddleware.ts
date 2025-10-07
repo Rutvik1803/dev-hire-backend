@@ -2,12 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/auth';
 import { UnauthorizedError } from '../utils/customErrors';
 
-// Extend Express Request type to include user
+// Extend Express Request type to include user and file (for multer)
 export interface AuthRequest extends Request {
   user?: {
     userId: number;
     role: string;
   };
+  file?: Express.Multer.File;
 }
 
 /**
