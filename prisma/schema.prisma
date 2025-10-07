@@ -16,6 +16,7 @@ model User {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   tokens    RefreshToken[]
+  jobs      Job[]         // Jobs posted by recruiter
 }
 
 model RefreshToken {
@@ -27,8 +28,30 @@ model RefreshToken {
   expiresAt DateTime
 }
 
+model Job {
+  id              Int      @id @default(autoincrement())
+  title           String
+  companyName     String
+  location        String
+  jobType         JobType
+  salaryRange     String
+  requiredSkills  String[] // Array of skills
+  description     String   @db.Text
+  recruiterId     Int
+  recruiter       User     @relation(fields: [recruiterId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 enum Role {
   DEVELOPER
   RECRUITER
   ADMIN
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
 }

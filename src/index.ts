@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import config from './config';
 import authRoutes from './modules/auth/auth.route';
+import jobRoutes from './modules/job/job.route';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app: Express = express();
@@ -27,6 +28,7 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // Global error handler middleware could be added here
 app.use(errorHandler);
