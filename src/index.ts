@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import config from './config';
 import authRoutes from './modules/auth/auth.route';
 import jobRoutes from './modules/job/job.route';
+import applicationRoutes from './modules/application/application.route';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app: Express = express();
@@ -11,7 +12,7 @@ const PORT: number = Number(config.PORT);
 // Add cors headers
 app.use((req: Request, res: Response, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Adjust as needed
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
   if (req.method === 'OPTIONS') {
@@ -29,6 +30,7 @@ app.use(cookieParser());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api', applicationRoutes);
 
 // Global error handler middleware could be added here
 app.use(errorHandler);

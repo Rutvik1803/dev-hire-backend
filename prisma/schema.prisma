@@ -8,15 +8,24 @@ generator client {
 }
 
 model User {
-  id        Int           @id @default(autoincrement())
-  email     String        @unique
-  password  String
-  name      String
-  role      Role          @default(DEVELOPER)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  tokens    RefreshToken[]
-  jobs      Job[]         // Jobs posted by recruiter
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  password     String
+  name         String
+  role         Role           @default(DEVELOPER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  tokens       RefreshToken[]
+  jobs         Job[]          // Jobs posted by recruiter
+  applications Application[]  // Applications submitted by developer
+  
+  // Developer profile fields
+  experience   String?
+  skills       String[]       @default([])
+  resumeUrl    String?
+  linkedinUrl  String?
+  githubUrl    String?
+  phone        String?
 }
 
 model RefreshToken {
@@ -29,18 +38,38 @@ model RefreshToken {
 }
 
 model Job {
-  id              Int      @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   title           String
   companyName     String
   location        String
   jobType         JobType
   salaryRange     String
-  requiredSkills  String[] // Array of skills
-  description     String   @db.Text
+  requiredSkills  String[]      // Array of skills
+  description     String        @db.Text
   recruiterId     Int
-  recruiter       User     @relation(fields: [recruiterId], references: [id])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  recruiter       User          @relation(fields: [recruiterId], references: [id])
+  applications    Application[] // Applications for this job
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Application {
+  id           Int               @id @default(autoincrement())
+  jobId        Int
+  applicantId  Int
+  status       ApplicationStatus @default(APPLIED)
+  coverLetter  String?           @db.Text
+  notes        String?           @db.Text
+  appliedDate  DateTime          @default(now())
+  updatedDate  DateTime          @updatedAt
+  
+  job          Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicant    User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  
+  @@unique([jobId, applicantId]) // Prevent duplicate applications
+  @@index([jobId])
+  @@index([applicantId])
+  @@index([status])
 }
 
 enum Role {
@@ -54,4 +83,11 @@ enum JobType {
   PART_TIME
   CONTRACT
   INTERNSHIP
+}
+
+enum ApplicationStatus {
+  APPLIED
+  IN_REVIEW
+  ACCEPTED
+  REJECTED
 }

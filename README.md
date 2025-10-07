@@ -1,20 +1,41 @@
 # DevHire Backend
 
-A secure, production-ready authentication system built with Express.js, TypeScript, Prisma, and PostgreSQL.
+A complete, production-ready job hiring platform backend built with Express.js, TypeScript, Prisma, and PostgreSQL.
 
 ## 🚀 Features
 
+### Authentication & Authorization
 - ✅ **User Registration (Sign Up)** - Complete with validation and security
 - ✅ **User Login** - Secure authentication with JWT tokens
+- ✅ **Role-Based Access Control** - Developer, Recruiter, and Admin roles
 - ✅ **Access Token Management** - Short-lived tokens (15 minutes)
 - ✅ **Refresh Token Management** - Long-lived tokens (7 days) stored in database
 - ✅ **HTTP-Only Cookies** - Secure token storage preventing XSS attacks
 - ✅ **Password Hashing** - Bcrypt with 10 salt rounds
+
+### Job Management
+- ✅ **Job Posting** - Recruiters can create job listings
+- ✅ **Job Browsing** - Public access to view all jobs
+- ✅ **Job Updates** - Recruiters can edit their job postings
+- ✅ **Job Deletion** - Recruiters can remove job listings
+- ✅ **Job Filtering** - Filter by skills, type, location
+
+### Application Management (NEW! 🎉)
+- ✅ **Job Applications** - Developers can apply to jobs
+- ✅ **Cover Letter Support** - Optional cover letter submission
+- ✅ **Application Status Tracking** - Applied, In Review, Accepted, Rejected
+- ✅ **Recruiter Dashboard** - Real-time statistics and analytics
+- ✅ **Application Management** - View, filter, and update applications
+- ✅ **Duplicate Prevention** - One application per job per developer
+- ✅ **Cascade Deletion** - Applications deleted when job is removed
+
+### Technical Features
 - ✅ **Input Validation** - Comprehensive validation at service layer
 - ✅ **Error Handling** - Organization-level error handling with proper status codes
 - ✅ **TypeScript** - Full type safety throughout the codebase
 - ✅ **Prisma ORM** - Modern database toolkit with migrations
 - ✅ **Function-Based Architecture** - Clean, maintainable code structure
+- ✅ **Database Optimization** - Indexes and efficient queries
 
 ## 📋 Prerequisites
 
@@ -74,75 +95,99 @@ A secure, production-ready authentication system built with Express.js, TypeScri
 
 ## 📚 API Documentation
 
+### Available API Groups
+
+1. **Authentication APIs** - User registration, login, token management
+2. **Job Management APIs** - Create, read, update, delete jobs
+3. **Application APIs** - Job applications and recruiter dashboard (NEW! 🎉)
+
 ### Base URL
 ```
-http://localhost:4000/api/auth
+http://localhost:4000/api
 ```
 
-### Endpoints
+### Quick Reference
 
-#### 1. Sign Up
+#### Authentication
+- `POST /api/auth/signup` - Register new user
+- `POST /api/auth/login` - User login
+
+#### Jobs
+- `GET /api/jobs` - Get all jobs (public)
+- `GET /api/jobs/:id` - Get single job (public)
+- `POST /api/jobs` - Create job (recruiter only)
+- `PUT /api/jobs/:id` - Update job (recruiter only)
+- `DELETE /api/jobs/:id` - Delete job (recruiter only)
+- `GET /api/jobs/my/jobs` - Get my jobs (recruiter only)
+
+#### Applications (NEW!)
+- `POST /api/jobs/:jobId/apply` - Apply to job (developer only)
+- `GET /api/applications/:id` - Get application details
+- `GET /api/jobs/:jobId/applications` - Get job applications (recruiter only)
+- `PATCH /api/applications/:id/status` - Update status (recruiter only)
+- `GET /api/recruiter/dashboard/stats` - Dashboard statistics (recruiter only)
+- `GET /api/recruiter/applications/recent` - Recent applications (recruiter only)
+- `GET /api/recruiter/applications` - All applications (recruiter only)
+
+### Complete Documentation
+
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - General API reference
+- **[JOB_API_DOCUMENTATION.md](./JOB_API_DOCUMENTATION.md)** - Job APIs
+- **[APPLICATION_API_DOCUMENTATION.md](./APPLICATION_API_DOCUMENTATION.md)** - Application APIs (NEW!)
+- **[FRONTEND_INTEGRATION_QUICKSTART.md](./FRONTEND_INTEGRATION_QUICKSTART.md)** - Frontend integration guide
+- **[POSTMAN_APPLICATION_TESTING_GUIDE.md](./POSTMAN_APPLICATION_TESTING_GUIDE.md)** - Testing guide
+
+### Sample Request
+
+#### Apply to a Job (Developer)
 ```http
-POST /api/auth/signup
+POST /api/jobs/1/apply
+Authorization: Bearer <developer_token>
 Content-Type: application/json
 
 {
-  "email": "user@example.com",
-  "name": "John Doe",
-  "password": "password123"
+  "coverLetter": "I am very interested in this position..."
 }
 ```
 
 **Response (201):**
 ```json
 {
-  "status": "success",
-  "message": "User registered successfully",
+  "success": true,
+  "message": "Application submitted successfully",
   "data": {
-    "user": {
-      "id": 1,
-      "email": "user@example.com",
-      "name": "John Doe",
-      "role": "USER",
-      "createdAt": "2025-10-06T10:00:00.000Z",
-      "updatedAt": "2025-10-06T10:00:00.000Z"
-    },
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "id": 1,
+    "jobId": 1,
+    "applicantId": 5,
+    "status": "APPLIED",
+    "coverLetter": "I am very interested...",
+    "appliedDate": "2025-10-07T12:30:00.000Z"
   }
 }
 ```
 
-#### 2. Login
+#### Get Dashboard Stats (Recruiter)
 ```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
+GET /api/recruiter/dashboard/stats
+Authorization: Bearer <recruiter_token>
 ```
 
 **Response (200):**
 ```json
 {
-  "status": "success",
-  "message": "Login successful",
+  "success": true,
   "data": {
-    "user": {
-      "id": 1,
-      "email": "user@example.com",
-      "name": "John Doe",
-      "role": "USER",
-      "createdAt": "2025-10-06T10:00:00.000Z",
-      "updatedAt": "2025-10-06T10:00:00.000Z"
-    },
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "jobsPosted": 5,
+    "totalApplicants": 23,
+    "inReview": 8,
+    "hired": 3,
+    "recentActivity": {
+      "newApplicationsToday": 2,
+      "newApplicationsThisWeek": 7
+    }
   }
 }
 ```
-
-For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
 
 ## 🧪 Testing
 
@@ -173,23 +218,37 @@ devhire-backend/
 │   │   ├── index.ts         # Environment configuration
 │   │   └── prisma.ts        # Prisma client instance
 │   ├── middlewares/
-│   │   ├── asyncHandler.ts  # Async error handler
-│   │   └── errorHandler.ts  # Global error handler
+│   │   ├── asyncHandler.ts        # Async error handler
+│   │   ├── errorHandler.ts        # Global error handler
+│   │   ├── authMiddleware.ts      # JWT authentication
+│   │   └── authorizationMiddleware.ts # Role-based authorization
 │   ├── modules/
-│   │   └── auth/
-│   │       ├── auth.controller.ts  # Auth controllers
-│   │       ├── auth.route.ts       # Auth routes
-│   │       └── auth.service.ts     # Auth business logic
+│   │   ├── auth/
+│   │   │   ├── auth.controller.ts  # Auth controllers
+│   │   │   ├── auth.route.ts       # Auth routes
+│   │   │   └── auth.service.ts     # Auth business logic
+│   │   ├── job/
+│   │   │   ├── job.controller.ts   # Job controllers
+│   │   │   ├── job.route.ts        # Job routes
+│   │   │   └── job.service.ts      # Job business logic
+│   │   └── application/ (NEW!)
+│   │       ├── application.controller.ts  # Application controllers
+│   │       ├── application.route.ts       # Application routes
+│   │       ├── application.service.ts     # Application business logic
+│   │       └── README.md                  # Module documentation
 │   ├── utils/
 │   │   ├── auth.ts          # Auth utilities (hashing, tokens)
 │   │   ├── customErrors.ts  # Custom error classes
 │   │   ├── response.ts      # Response formatters
 │   │   └── userResponse.ts  # User data sanitization
 │   └── index.ts             # Application entry point
-├── .env.example             # Environment variables template
-├── API_DOCUMENTATION.md     # Complete API documentation
-├── IMPLEMENTATION_SUMMARY.md # Implementation details
-├── TESTING_GUIDE.md         # Testing instructions
+├── .env.example                           # Environment variables template
+├── API_DOCUMENTATION.md                   # API documentation
+├── JOB_API_DOCUMENTATION.md               # Job API documentation
+├── APPLICATION_API_DOCUMENTATION.md       # Application API docs (NEW!)
+├── FRONTEND_INTEGRATION_QUICKSTART.md     # Integration guide (NEW!)
+├── POSTMAN_APPLICATION_TESTING_GUIDE.md   # Testing guide (NEW!)
+├── IMPLEMENTATION_COMPLETE_SUMMARY.md     # Implementation summary (NEW!)
 ├── package.json
 └── tsconfig.json
 ```
@@ -257,10 +316,76 @@ npx prisma migrate status  # Check migration status
 
 ## 📖 Documentation
 
-- [API Documentation](./API_DOCUMENTATION.md) - Complete API reference
-- [Implementation Summary](./IMPLEMENTATION_SUMMARY.md) - Technical implementation details
-- [Testing Guide](./TESTING_GUIDE.md) - How to test the application
-- [Prisma README](./PRISMAREADME.md) - Prisma-specific documentation
+### Getting Started
+- **[README.md](./README.md)** - This file (overview and setup)
+- **[IMPLEMENTATION_COMPLETE_SUMMARY.md](./IMPLEMENTATION_COMPLETE_SUMMARY.md)** - Complete implementation status
+
+### API Documentation
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - Authentication API reference
+- **[JOB_API_DOCUMENTATION.md](./JOB_API_DOCUMENTATION.md)** - Job management APIs
+- **[APPLICATION_API_DOCUMENTATION.md](./APPLICATION_API_DOCUMENTATION.md)** - Application & dashboard APIs (NEW!)
+
+### Integration & Testing
+- **[FRONTEND_INTEGRATION_QUICKSTART.md](./FRONTEND_INTEGRATION_QUICKSTART.md)** - React integration guide with code examples
+- **[POSTMAN_APPLICATION_TESTING_GUIDE.md](./POSTMAN_APPLICATION_TESTING_GUIDE.md)** - Step-by-step testing guide
+- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - General testing instructions
+
+### Technical Details
+- **[src/modules/application/README.md](./src/modules/application/README.md)** - Application module documentation
+- **[PRISMAREADME.md](./PRISMAREADME.md)** - Prisma-specific documentation
+- **[API_IMPLEMENTATION_SUMMARY.md](./API_IMPLEMENTATION_SUMMARY.md)** - Implementation details
+
+## 🎯 Quick Start Guide
+
+### For Backend Development
+
+1. **Setup**
+   ```bash
+   npm install
+   cp .env.example .env
+   # Edit .env with your database credentials
+   npx prisma migrate dev
+   npm run dev
+   ```
+
+2. **Test APIs**
+   - Open Postman
+   - Follow [POSTMAN_APPLICATION_TESTING_GUIDE.md](./POSTMAN_APPLICATION_TESTING_GUIDE.md)
+
+### For Frontend Integration
+
+1. **Read Documentation**
+   - Start with [APPLICATION_API_DOCUMENTATION.md](./APPLICATION_API_DOCUMENTATION.md)
+   - Review [FRONTEND_INTEGRATION_QUICKSTART.md](./FRONTEND_INTEGRATION_QUICKSTART.md)
+
+2. **Copy Service Code**
+   ```javascript
+   // All service functions are provided in the integration guide
+   // Copy to your frontend: src/services/applicationService.js
+   ```
+
+3. **Implement Features**
+   - Recruiter Dashboard (statistics, recent applications)
+   - Application Management (list, details, status updates)
+   - Job Application Form (for developers)
+
+## 🆕 What's New (October 2025)
+
+### Application Management System
+- ✅ Complete job application workflow
+- ✅ Recruiter dashboard with real-time statistics
+- ✅ Application status management (Applied, In Review, Accepted, Rejected)
+- ✅ Filter and sort applications
+- ✅ View application details with applicant information
+- ✅ Recent applications widget
+- ✅ Job update and delete functionality
+- ✅ Comprehensive documentation and integration guides
+
+### Documentation Enhancements
+- ✅ 5 new comprehensive documentation files
+- ✅ Frontend integration guide with React code examples
+- ✅ Step-by-step Postman testing guide
+- ✅ Complete API reference for all endpoints
 
 ## 🚧 Future Enhancements
 
