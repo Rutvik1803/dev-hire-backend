@@ -13,6 +13,33 @@ export type GenerateQuestionsData = {
     techStack: string[];
 };
 
+// Type for user details
+export type UserDetails = {
+    name: string;
+    email?: string;
+    experience?: string;
+    skills?: string[];
+    phone?: string;
+    linkedinUrl?: string;
+    githubUrl?: string;
+};
+
+// Type for job description
+export type JobDescription = {
+    title: string;
+    companyName: string;
+    description: string;
+    requiredSkills?: string[];
+    location?: string;
+    jobType?: string;
+};
+
+// Type for generate cover letter request
+export type GenerateCoverLetterData = {
+    userDetails: UserDetails;
+    jobDescription: JobDescription;
+};
+
 /**
  * Service to generate interview questions using Ollama
  */
@@ -244,4 +271,218 @@ const validateQuestions = (questions: any[]): void => {
     }
 
     console.log(`✅ Successfully validated ${questions.length} questions`);
+};
+
+/**
+ * Service to generate cover letter using Ollama
+ */
+export const generateCoverLetter = async (
+    userDetails: UserDetails,
+    jobDescription: JobDescription
+): Promise<string> => {
+    // Validate user details
+    if (!userDetails || !userDetails.name) {
+        throw BadRequestError('User name is required');
+    }
+
+    // Validate job description
+    if (!jobDescription || !jobDescription.title || !jobDescription.companyName) {
+        throw BadRequestError('Job title and company name are required');
+    }
+
+    // Build user information string
+    const userInfo = buildUserInfoString(userDetails);
+    const jobInfo = buildJobInfoString(jobDescription);
+
+    // Create the prompt for cover letter
+    const prompt = `You are a professional career advisor and expert cover letter writer.
+
+Generate a compelling, professional cover letter for the following candidate applying to this job.
+
+CANDIDATE INFORMATION:
+${userInfo}
+
+JOB DETAILS:
+${jobInfo}
+
+REQUIREMENTS:
+1. Write a professional, personalized cover letter (250-400 words)
+2. Highlight relevant skills and experience that match the job requirements
+3. Show enthusiasm for the role and company
+4. Use a professional yet conversational tone
+5. Include proper formatting with paragraphs
+6. Do NOT include placeholder fields like [Your Name], [Date], or addresses
+7. Start directly with the opening paragraph
+8. End with a professional closing
+
+Return ONLY the cover letter text, no additional formatting, no markdown, no explanations.`;
+
+    try {
+        console.log('📝 Generating cover letter with Ollama...');
+
+        // Call Ollama API
+        const response = await axios.post<{ response: string }>(
+            'http://localhost:11434/api/generate',
+            {
+                model: 'gemma3',
+                prompt: prompt,
+                stream: false,
+            },
+            {
+                timeout: 90000, // 90 second timeout (longer for cover letters)
+            }
+        );
+
+        const rawOutput = response.data.response;
+
+        if (!rawOutput) {
+            throw InternalServerError('Empty response from AI service');
+        }
+
+        console.log('📝 Received cover letter from Ollama, processing...');
+
+        // Clean up the cover letter
+        const coverLetter = cleanCoverLetter(rawOutput);
+
+        // Validate cover letter
+        validateCoverLetter(coverLetter);
+
+        console.log('✅ Successfully generated cover letter');
+
+        return coverLetter;
+    } catch (error: any) {
+        console.error('Error calling Ollama service:', error.message);
+
+        if (error.code === 'ECONNREFUSED') {
+            throw InternalServerError('Cannot connect to Ollama service. Make sure Ollama is running on localhost:11434');
+        }
+
+        if (error.response?.status === 404) {
+            throw InternalServerError('Model "gemma3" not found. Please run: ollama pull gemma3');
+        }
+
+        if (error.response) {
+            throw InternalServerError(`AI service error: ${error.message}`);
+        }
+
+        // Re-throw if it's already our custom error
+        if (error.status) {
+            throw error;
+        }
+
+        throw InternalServerError('Failed to generate cover letter');
+    }
+};
+
+/**
+ * Build user information string for prompt
+ */
+const buildUserInfoString = (userDetails: UserDetails): string => {
+    const parts: string[] = [];
+
+    parts.push(`Name: ${userDetails.name}`);
+
+    if (userDetails.email) {
+        parts.push(`Email: ${userDetails.email}`);
+    }
+
+    if (userDetails.experience) {
+        parts.push(`Experience: ${userDetails.experience}`);
+    }
+
+    if (userDetails.skills && userDetails.skills.length > 0) {
+        parts.push(`Skills: ${userDetails.skills.join(', ')}`);
+    }
+
+    if (userDetails.phone) {
+        parts.push(`Phone: ${userDetails.phone}`);
+    }
+
+    if (userDetails.linkedinUrl) {
+        parts.push(`LinkedIn: ${userDetails.linkedinUrl}`);
+    }
+
+    if (userDetails.githubUrl) {
+        parts.push(`GitHub: ${userDetails.githubUrl}`);
+    }
+
+    return parts.join('\n');
+};
+
+/**
+ * Build job information string for prompt
+ */
+const buildJobInfoString = (jobDescription: JobDescription): string => {
+    const parts: string[] = [];
+
+    parts.push(`Position: ${jobDescription.title}`);
+    parts.push(`Company: ${jobDescription.companyName}`);
+
+    if (jobDescription.description) {
+        parts.push(`Description: ${jobDescription.description}`);
+    }
+
+    if (jobDescription.location) {
+        parts.push(`Location: ${jobDescription.location}`);
+    }
+
+    if (jobDescription.jobType) {
+        parts.push(`Job Type: ${jobDescription.jobType}`);
+    }
+
+    if (jobDescription.requiredSkills && jobDescription.requiredSkills.length > 0) {
+        parts.push(`Required Skills: ${jobDescription.requiredSkills.join(', ')}`);
+    }
+
+    return parts.join('\n');
+};
+
+/**
+ * Clean up cover letter text
+ */
+const cleanCoverLetter = (rawOutput: string): string => {
+    let cleaned = rawOutput.trim();
+
+    // Remove markdown code blocks
+    cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+    cleaned = cleaned.replace(/```/g, '');
+
+    // Remove common placeholder patterns
+    cleaned = cleaned.replace(/\[Your Name\]/gi, '');
+    cleaned = cleaned.replace(/\[Date\]/gi, '');
+    cleaned = cleaned.replace(/\[Your Address\]/gi, '');
+    cleaned = cleaned.replace(/\[Company Address\]/gi, '');
+    cleaned = cleaned.replace(/\[Hiring Manager\]/gi, 'Hiring Manager');
+    cleaned = cleaned.replace(/\[Company Name\]/gi, '');
+    cleaned = cleaned.replace(/\[Position Title\]/gi, '');
+
+    // Remove any remaining square brackets with content
+    cleaned = cleaned.replace(/\[.*?\]/g, '');
+
+    // Clean up multiple newlines
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+
+    // Remove leading/trailing whitespace
+    cleaned = cleaned.trim();
+
+    return cleaned;
+};
+
+/**
+ * Validate cover letter content
+ */
+const validateCoverLetter = (coverLetter: string): void => {
+    if (!coverLetter || coverLetter.length < 100) {
+        throw BadRequestError('Generated cover letter is too short or empty. Please try again.');
+    }
+
+    if (coverLetter.length > 5000) {
+        throw BadRequestError('Generated cover letter is too long. Please try again.');
+    }
+
+    // Check for remaining placeholders
+    const placeholderPattern = /\[.*?\]/;
+    if (placeholderPattern.test(coverLetter)) {
+        console.warn('Cover letter contains placeholders, but proceeding...');
+    }
 };

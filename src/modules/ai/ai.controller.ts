@@ -23,3 +23,35 @@ export const generateQuestionsController = async (req: Request, res: Response) =
         200
     );
 };
+
+/**
+ * Controller to generate cover letter
+ * POST /api/ai/generate-cover-letter
+ * Body: { 
+ *   userDetails: { name, email, experience, skills, ... },
+ *   jobDescription: { title, companyName, description, ... }
+ * }
+ */
+export const generateCoverLetterController = async (req: Request, res: Response) => {
+    const { userDetails, jobDescription } = req.body;
+
+    const coverLetter = await aiService.generateCoverLetter(userDetails, jobDescription);
+
+    successResponse(
+        res,
+        {
+            coverLetter,
+            generatedAt: new Date().toISOString(),
+            userDetails: {
+                name: userDetails.name,
+                email: userDetails.email,
+            },
+            jobDetails: {
+                title: jobDescription.title,
+                companyName: jobDescription.companyName,
+            },
+        },
+        'Cover letter generated successfully',
+        200
+    );
+};

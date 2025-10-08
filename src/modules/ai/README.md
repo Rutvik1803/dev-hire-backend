@@ -1,19 +1,30 @@
-# AI Module - Interview Questions Generator
+# AI Module - Interview Questions & Cover Letter Generator
 
-This module provides AI-powered interview question generation using Ollama's local LLM.
+This module provides AI-powered services using Ollama's local LLM:
+1. **Interview Questions Generator** - Generate MCQ questions for technical interviews
+2. **Cover Letter Generator** - Generate personalized cover letters for job applications
 
 ## Overview
 
-The AI module generates multiple-choice questions (MCQs) for technical interviews based on specified technology stacks. It uses Ollama running locally with the Gemma model.
+The AI module uses Ollama running locally with the Gemma model to provide intelligent content generation services.
 
 ## Features
 
+### Interview Questions Generator
 - ✅ Generate 10 MCQ questions based on tech stack
 - ✅ Each question has 4 options with 1 correct answer
 - ✅ Beginner to intermediate difficulty level
 - ✅ Validates AI response format
 - ✅ Error handling for AI service issues
 - ✅ Clean JSON parsing with fallback mechanisms
+
+### Cover Letter Generator (NEW! 🎉)
+- ✅ Generate personalized cover letters based on user profile and job details
+- ✅ Professional tone and formatting (250-400 words)
+- ✅ Highlights relevant skills and experience
+- ✅ Customizes content for specific job requirements
+- ✅ Removes placeholder text automatically
+- ✅ Ready-to-use professional output
 
 ## Prerequisites
 
@@ -57,9 +68,9 @@ ollama run gemma2:2b
 curl http://localhost:11434/api/version
 ```
 
-## API Endpoint
+## API Endpoints
 
-### Generate Interview Questions
+### 1. Generate Interview Questions
 
 **Endpoint:** `POST /api/ai/generate-questions`
 
@@ -180,6 +191,183 @@ const generateQuestions = async (techStack: string[]) => {
 // Usage
 const questions = await generateQuestions(['React', 'TypeScript', 'Node.js']);
 ```
+
+### 2. Generate Cover Letter
+
+**Endpoint:** `POST /api/ai/generate-cover-letter`
+
+**Access:** Public (can be protected with authentication if needed)
+
+**Request Body:**
+```json
+{
+  "userDetails": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "experience": "5 years of full-stack development",
+    "skills": ["React", "Node.js", "TypeScript", "AWS"],
+    "phone": "+1-555-0123",
+    "linkedinUrl": "https://linkedin.com/in/johndoe",
+    "githubUrl": "https://github.com/johndoe"
+  },
+  "jobDescription": {
+    "title": "Senior Full Stack Developer",
+    "companyName": "TechCorp Inc.",
+    "description": "We are seeking an experienced Full Stack Developer...",
+    "requiredSkills": ["React", "Node.js", "TypeScript"],
+    "location": "San Francisco, CA",
+    "jobType": "FULL_TIME"
+  }
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Cover letter generated successfully",
+  "data": {
+    "coverLetter": "Dear Hiring Manager,\n\nI am writing to express my strong interest in the Senior Full Stack Developer position at TechCorp Inc...\n\n[Full professional cover letter text]",
+    "generatedAt": "2025-10-08T12:00:00.000Z",
+    "userDetails": {
+      "name": "John Doe",
+      "email": "john@example.com"
+    },
+    "jobDetails": {
+      "title": "Senior Full Stack Developer",
+      "companyName": "TechCorp Inc."
+    }
+  }
+}
+```
+
+**Required Fields:**
+- `userDetails.name` - User's full name
+- `jobDescription.title` - Job position title
+- `jobDescription.companyName` - Company name
+- `jobDescription.description` - Job description (highly recommended)
+
+**Optional Fields (Recommended for Better Results):**
+- All other fields in `userDetails` (email, experience, skills, etc.)
+- All other fields in `jobDescription` (requiredSkills, location, jobType)
+
+**Using curl:**
+```bash
+curl -X POST http://localhost:4000/api/ai/generate-cover-letter \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userDetails": {
+      "name": "Jane Smith",
+      "experience": "3 years",
+      "skills": ["React", "Node.js"]
+    },
+    "jobDescription": {
+      "title": "Frontend Developer",
+      "companyName": "Acme Corp",
+      "description": "Looking for a skilled frontend developer..."
+    }
+  }'
+```
+
+## Usage Examples
+
+### Interview Questions - Using curl
+
+```bash
+curl -X POST http://localhost:4000/api/ai/generate-questions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "techStack": ["React", "Node.js", "Express", "MongoDB"]
+  }'
+```
+
+### Cover Letter - Using curl
+
+```bash
+curl -X POST http://localhost:4000/api/ai/generate-cover-letter \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userDetails": {
+      "name": "John Doe",
+      "email": "john@example.com",
+      "skills": ["React", "TypeScript", "Node.js"]
+    },
+    "jobDescription": {
+      "title": "Full Stack Developer",
+      "companyName": "TechStart",
+      "description": "We need an experienced full stack developer"
+    }
+  }'
+```
+
+### Using JavaScript/TypeScript
+
+**Interview Questions:**
+```typescript
+const response = await fetch('http://localhost:4000/api/ai/generate-questions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    techStack: ['Python', 'Django', 'PostgreSQL'],
+  }),
+});
+
+const data = await response.json();
+console.log(data.data.questions);
+```
+
+**Cover Letter:**
+```typescript
+const response = await fetch('http://localhost:4000/api/ai/generate-cover-letter', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    userDetails: {
+      name: 'Alex Johnson',
+      skills: ['JavaScript', 'React']
+    },
+    jobDescription: {
+      title: 'Junior Developer',
+      companyName: 'StartupXYZ',
+      description: 'Entry-level position'
+    }
+  }),
+});
+
+const data = await response.json();
+console.log(data.data.coverLetter);
+```
+
+### Using Axios (Frontend)
+
+**Interview Questions:**
+```typescript
+import axios from 'axios';
+
+const generateQuestions = async (techStack: string[]) => {
+  try {
+    const response = await axios.post(
+      'http://localhost:4000/api/ai/generate-questions',
+      { techStack }
+    );
+    
+    return response.data.data.questions;
+  } catch (error) {
+    console.error('Error generating questions:', error);
+    throw error;
+  }
+};
+
+// Usage
+const questions = await generateQuestions(['React', 'TypeScript', 'Node.js']);
+```
+
+**Cover Letter:**
+```typescript
 
 ## Module Structure
 
