@@ -65,10 +65,29 @@ model Application {
   
   job          Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
   applicant    User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  interview    Interview?        // One-to-one relation with Interview
   
   @@unique([jobId, applicantId]) // Prevent duplicate applications
   @@index([jobId])
   @@index([applicantId])
+  @@index([status])
+}
+
+model Interview {
+  id                Int      @id @default(autoincrement())
+  applicationId     Int      @unique
+  scheduledDate     DateTime
+  duration          Int      // Duration in minutes (60, 90, 120, etc.)
+  meetingLink       String?  // Optional meeting link (Zoom, Meet, etc.)
+  location          String?  // Physical location or "Virtual"
+  interviewerNotes  String?  @db.Text
+  status            InterviewStatus @default(SCHEDULED)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  application       Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  @@index([scheduledDate])
   @@index([status])
 }
 
@@ -90,4 +109,11 @@ enum ApplicationStatus {
   IN_REVIEW
   ACCEPTED
   REJECTED
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
 }

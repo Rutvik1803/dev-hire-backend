@@ -7,6 +7,7 @@ import jobRoutes from './modules/job/job.route';
 import applicationRoutes from './modules/application/application.route';
 import developerRoutes from './modules/developer/developer.route';
 import aiRoutes from './modules/ai/ai.route';
+import interviewRoutes from './modules/interview/interview.route';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app: Express = express();
@@ -39,6 +40,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api', applicationRoutes);
 app.use('/api/developer', developerRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/interviews', interviewRoutes);
 
 // Global error handler middleware could be added here
 app.use(errorHandler);
